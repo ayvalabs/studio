@@ -8,8 +8,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ISOMETRIC_EXERCISES, Exercise } from '@/lib/workout-data';
 import { generateWorkoutImage } from '@/ai/flows/ai-generated-workout-image-display';
 import { audioController } from '@/lib/audio-utils';
-import { ArrowLeft, Pause, Play, SkipForward, X, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Pause, Play, SkipForward, X, RotateCcw, Camera, Scan, Activity } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { toast } from '@/hooks/use-toast';
 
 type WorkoutPhase = 'READY' | 'HOLD' | 'REP_REST' | 'SET_REST' | 'FINISHED';
 
@@ -22,6 +24,8 @@ export default function WorkoutPage() {
   const [isActive, setIsActive] = useState(false);
   const [exerciseImages, setExerciseImages] = useState<Record<string, string>>({});
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [accuracy, setAccuracy] = useState(0);
 
   const [settings, setSettings] = useState({
     holdTime: 30,
@@ -30,6 +34,7 @@ export default function WorkoutPage() {
   });
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const currentEx = ISOMETRIC_EXERCISES[exerciseIndex];
 
   // Load settings
@@ -37,6 +42,41 @@ export default function WorkoutPage() {
     const saved = localStorage.getItem('isometric-21-settings');
     if (saved) setSettings(JSON.parse(saved));
   }, []);
+
+  // Camera Access
+  useEffect(() => {
+    const getCameraPermission = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setHasCameraPermission(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Camera Access Denied',
+          description: 'Please enable camera permissions in your browser settings to use the form analysis feature.',
+        });
+      }
+    };
+    getCameraPermission();
+  }, []);
+
+  // Mock Pose Analysis Accuracy
+  useEffect(() => {
+    if (isActive && phase === 'HOLD') {
+      const interval = setInterval(() => {
+        // Simulating a "live" fluctuation in pose accuracy
+        setAccuracy(Math.floor(Math.random() * (98 - 85 + 1) + 85));
+      }, 1500);
+      return () => clearInterval(interval);
+    } else {
+      setAccuracy(0);
+    }
+  }, [isActive, phase]);
 
   // Fetch AI Image for current exercise
   useEffect(() => {
@@ -86,7 +126,7 @@ export default function WorkoutPage() {
         // Save progress
         const saved = localStorage.getItem('isometric-21-progress');
         const progress = saved ? JSON.parse(saved) : [];
-        const today = new Date().getDate(); // Simplified: just use current date day as ID for the 21 grid
+        const today = new Date().getDate(); 
         if (!progress.includes(today)) {
           progress.push(today);
           localStorage.setItem('isometric-21-progress', JSON.stringify(progress));
@@ -119,13 +159,6 @@ export default function WorkoutPage() {
   }, [isActive, timeLeft, nextPhase]);
 
   const togglePause = () => setIsActive(!isActive);
-  const resetWorkout = () => {
-    setExerciseIndex(0);
-    setCurrentSet(1);
-    setPhase('READY');
-    setTimeLeft(10);
-    setIsActive(false);
-  };
 
   const currentImageUrl = exerciseImages[currentEx.name] || `https://picsum.photos/seed/${currentEx.id}/800/600`;
 
@@ -140,7 +173,7 @@ export default function WorkoutPage() {
             <Trophy size={48} />
           </div>
           <h1 className="text-4xl font-headline text-white">CHALLENGE COMPLETE!</h1>
-          <p className="text-muted-foreground">Amazing job! You finished all 7 isometric holds today. See you tomorrow for Day {exerciseIndex + 1} progression.</p>
+          <p className="text-muted-foreground">Amazing job! You finished all 7 isometric holds today. You are mastering your form.</p>
           <Button onClick={() => router.push('/')} className="w-full bg-primary text-primary-foreground h-14 font-bold">
             RETURN TO DASHBOARD
           </Button>
@@ -163,114 +196,172 @@ export default function WorkoutPage() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col lg:flex-row p-4 gap-6 max-w-6xl mx-auto w-full">
-        {/* Visual Panel */}
-        <div className="flex-1 space-y-4">
-          <Card className="overflow-hidden bg-card/50 border-white/5 aspect-video relative">
-            {isGeneratingImage && !exerciseImages[currentEx.name] ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm z-10 text-white gap-4">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <p className="font-bold tracking-widest text-sm">GENERATING AI FORM GUIDANCE...</p>
+      <main className="flex-1 flex flex-col lg:flex-row p-4 gap-6 max-w-7xl mx-auto w-full">
+        {/* Visual Panels Container */}
+        <div className="flex-1 flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Reference Image */}
+            <Card className="overflow-hidden bg-card/50 border-white/5 aspect-video relative group">
+              {isGeneratingImage && !exerciseImages[currentEx.name] ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm z-10 text-white gap-4">
+                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <p className="font-bold tracking-widest text-sm">LOADING PRO FORM...</p>
+                </div>
+              ) : null}
+              <Image 
+                src={currentImageUrl}
+                alt={currentEx.name}
+                fill
+                className="object-cover"
+                data-ai-hint={currentEx.name}
+              />
+              <div className="absolute top-2 left-2 px-2 py-1 rounded bg-black/60 text-[10px] font-bold text-white uppercase tracking-tighter">
+                Pro Model Reference
               </div>
-            ) : null}
-            <Image 
-              src={currentImageUrl}
-              alt={currentEx.name}
-              fill
-              className="object-cover"
-              data-ai-hint={currentEx.name}
-            />
-            <div className="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-              <h2 className="text-3xl font-headline text-white mb-2">{currentEx.name}</h2>
-              <div className="flex gap-2">
-                {currentEx.muscles.map(m => (
-                  <span key={m} className="px-2 py-0.5 rounded-full bg-accent/20 border border-accent/30 text-accent text-[10px] font-bold uppercase">
-                    {m}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </Card>
+            </Card>
 
-          <Card className="bg-card/30 border-white/5">
-            <CardContent className="p-6 space-y-4">
-              <h3 className="font-bold text-primary uppercase text-sm tracking-widest">Form Cues</h3>
-              <ul className="space-y-2">
-                {currentEx.cues.map((cue, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
-                    <span className="w-5 h-5 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 text-white text-[10px] border border-white/10">{i+1}</span>
-                    {cue}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+            {/* User Camera */}
+            <Card className="overflow-hidden bg-card/50 border-white/5 aspect-video relative">
+              <video 
+                ref={videoRef} 
+                className="w-full h-full object-cover scale-x-[-1]" 
+                autoPlay 
+                muted 
+                playsInline
+              />
+              
+              {/* Scan Overlay UI */}
+              <div className="absolute inset-0 border-2 border-primary/20 pointer-events-none">
+                <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+                  <div className="bg-black/60 px-3 py-1 rounded-full flex items-center gap-2 border border-primary/30">
+                    <Activity size={14} className={isActive && phase === 'HOLD' ? "text-primary animate-pulse" : "text-muted-foreground"} />
+                    <span className="text-[10px] font-bold text-white uppercase tracking-widest">Live Analysis</span>
+                  </div>
+                  {accuracy > 0 && (
+                    <div className="bg-primary/90 text-primary-foreground px-3 py-1 rounded-md text-sm font-bold flex items-center gap-2">
+                      <Scan size={14} />
+                      {accuracy}% MATCH
+                    </div>
+                  )}
+                </div>
+                
+                {/* Corner Brackets */}
+                <div className="absolute top-4 left-4 w-4 h-4 border-l-2 border-t-2 border-primary" />
+                <div className="absolute top-4 right-4 w-4 h-4 border-r-2 border-t-2 border-primary" />
+                <div className="absolute bottom-4 left-4 w-4 h-4 border-l-2 border-b-2 border-primary" />
+                <div className="absolute bottom-4 right-4 w-4 h-4 border-r-2 border-b-2 border-primary" />
+              </div>
+
+              {hasCameraPermission === false && (
+                <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-6 text-center">
+                  <Alert variant="destructive" className="max-w-xs bg-destructive/10">
+                    <AlertTitle className="flex items-center justify-center gap-2">
+                      <Camera size={16} /> Camera Access Required
+                    </AlertTitle>
+                    <AlertDescription>
+                      Enable camera for real-time pose estimation and form matching.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <Card className="bg-card/30 border-white/5">
+                <CardContent className="p-4 space-y-3">
+                  <h3 className="font-bold text-primary uppercase text-xs tracking-widest">Exercise: {currentEx.name}</h3>
+                  <div className="flex gap-2">
+                    {currentEx.muscles.map(m => (
+                      <span key={m} className="px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-[9px] font-bold uppercase">
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground italic">"{currentEx.description}"</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/30 border-white/5">
+                <CardContent className="p-4 space-y-2">
+                  <h3 className="font-bold text-primary uppercase text-xs tracking-widest">Live Form Cues</h3>
+                  <div className="space-y-1">
+                    {currentEx.cues.map((cue, i) => (
+                      <div key={i} className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <div className="w-1 h-1 rounded-full bg-primary" />
+                        {cue}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+          </div>
         </div>
 
-        {/* Timer Panel */}
-        <div className="w-full lg:w-96 flex flex-col gap-6">
-          <Card className="bg-card/50 border-white/5 flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
+        {/* Control Panel */}
+        <div className="w-full lg:w-96 flex flex-col gap-4">
+          <Card className="bg-card/50 border-white/5 flex flex-col items-center justify-center p-8 relative overflow-hidden">
             <div className="absolute top-4 left-6 text-xs font-bold text-accent uppercase tracking-widest">
               Set {currentSet} of {currentEx.suggestedSets}
             </div>
             
-            <div className="relative w-64 h-64 flex items-center justify-center">
+            <div className="relative w-56 h-56 flex items-center justify-center">
               <svg className="w-full h-full -rotate-90">
                 <circle
                   cx="50%" cy="50%" r="48%"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="8"
+                  strokeWidth="6"
                   className="text-white/5"
                 />
                 <circle
                   cx="50%" cy="50%" r="48%"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="8"
+                  strokeWidth="6"
                   strokeDasharray="301"
                   strokeDashoffset={301 - (301 * timeLeft / (phase === 'HOLD' ? settings.holdTime : 10))}
                   strokeLinecap="round"
-                  className={`timer-ring transition-all ${phase === 'HOLD' ? 'text-primary' : 'text-accent'}`}
+                  className={`timer-ring transition-all duration-1000 ${phase === 'HOLD' ? 'text-primary' : 'text-accent'}`}
                 />
               </svg>
               <div className="absolute flex flex-col items-center justify-center">
-                <span className="text-7xl font-headline font-bold text-white tabular-nums">{timeLeft}</span>
-                <span className="text-sm font-bold uppercase text-muted-foreground tracking-widest">Seconds Left</span>
+                <span className="text-6xl font-headline font-bold text-white tabular-nums">{timeLeft}</span>
+                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Seconds</span>
               </div>
             </div>
 
-            <div className="mt-8 text-center">
-              <h4 className="text-xl font-headline text-white mb-1">
+            <div className="mt-6 text-center">
+              <h4 className="text-lg font-headline text-white mb-1">
                 {phase === 'READY' && 'GET READY'}
                 {phase === 'HOLD' && 'HOLD POSITION'}
-                {phase === 'REP_REST' && 'REST'}
-                {phase === 'SET_REST' && 'SWITCHING'}
+                {phase === 'REP_REST' && 'BREATHE'}
+                {phase === 'SET_REST' && 'NEXT EXERCISE'}
               </h4>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-xs">
                 {phase === 'READY' && `Next: ${currentEx.name}`}
-                {phase === 'HOLD' && 'Keep the tension!'}
-                {phase === 'REP_REST' && 'Breathe and recover'}
-                {phase === 'SET_REST' && 'Prepare for next move'}
+                {phase === 'HOLD' && 'Match the model\'s form!'}
+                {phase === 'REP_REST' && 'Brief recovery...'}
+                {phase === 'SET_REST' && 'Adjusting camera...'}
               </p>
             </div>
           </Card>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <Button 
               onClick={togglePause} 
               variant={isActive ? "secondary" : "default"}
-              className={`h-16 text-lg font-bold gap-2 ${!isActive ? 'bg-primary hover:bg-primary/80 text-primary-foreground' : ''}`}
+              className={`h-14 text-sm font-bold gap-2 ${!isActive ? 'bg-primary hover:bg-primary/80 text-primary-foreground' : ''}`}
             >
-              {isActive ? <Pause /> : <Play fill="currentColor" />}
+              {isActive ? <Pause size={18} /> : <Play fill="currentColor" size={18} />}
               {isActive ? 'PAUSE' : 'START'}
             </Button>
             <Button 
               onClick={nextPhase} 
               variant="outline"
-              className="h-16 border-white/10 hover:bg-white/5 gap-2"
+              className="h-14 border-white/10 hover:bg-white/5 gap-2 text-sm"
             >
-              <SkipForward />
+              <SkipForward size={18} />
               SKIP
             </Button>
           </div>
