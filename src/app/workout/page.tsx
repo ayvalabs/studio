@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ISOMETRIC_EXERCISES, Exercise } from '@/lib/workout-data';
 import { generateWorkoutImage } from '@/ai/flows/ai-generated-workout-image-display';
 import { audioController } from '@/lib/audio-utils';
-import { ArrowLeft, Pause, Play, SkipForward, X, RotateCcw, Camera, Scan, Activity } from 'lucide-react';
+import { ArrowLeft, Pause, Play, SkipForward, X, RotateCcw, Camera, Scan, Activity, Music } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
@@ -69,12 +69,20 @@ export default function WorkoutPage() {
   useEffect(() => {
     if (isActive && phase === 'HOLD') {
       const interval = setInterval(() => {
-        // Simulating a "live" fluctuation in pose accuracy
         setAccuracy(Math.floor(Math.random() * (98 - 85 + 1) + 85));
       }, 1500);
       return () => clearInterval(interval);
     } else {
       setAccuracy(0);
+    }
+  }, [isActive, phase]);
+
+  // Manage Background Music
+  useEffect(() => {
+    if (isActive && phase === 'HOLD') {
+      audioController?.startMotivationalMusic();
+    } else {
+      audioController?.stopMotivationalMusic();
     }
   }, [isActive, phase]);
 
@@ -123,7 +131,6 @@ export default function WorkoutPage() {
       } else {
         setPhase('FINISHED');
         setIsActive(false);
-        // Save progress
         const saved = localStorage.getItem('isometric-21-progress');
         const progress = saved ? JSON.parse(saved) : [];
         const today = new Date().getDate(); 
@@ -197,10 +204,8 @@ export default function WorkoutPage() {
       </header>
 
       <main className="flex-1 flex flex-col lg:flex-row p-4 gap-6 max-w-7xl mx-auto w-full">
-        {/* Visual Panels Container */}
         <div className="flex-1 flex flex-col gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Reference Image */}
             <Card className="overflow-hidden bg-card/50 border-white/5 aspect-video relative group">
               {isGeneratingImage && !exerciseImages[currentEx.name] ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm z-10 text-white gap-4">
@@ -220,7 +225,6 @@ export default function WorkoutPage() {
               </div>
             </Card>
 
-            {/* User Camera */}
             <Card className="overflow-hidden bg-card/50 border-white/5 aspect-video relative">
               <video 
                 ref={videoRef} 
@@ -230,7 +234,6 @@ export default function WorkoutPage() {
                 playsInline
               />
               
-              {/* Scan Overlay UI */}
               <div className="absolute inset-0 border-2 border-primary/20 pointer-events-none">
                 <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
                   <div className="bg-black/60 px-3 py-1 rounded-full flex items-center gap-2 border border-primary/30">
@@ -245,7 +248,6 @@ export default function WorkoutPage() {
                   )}
                 </div>
                 
-                {/* Corner Brackets */}
                 <div className="absolute top-4 left-4 w-4 h-4 border-l-2 border-t-2 border-primary" />
                 <div className="absolute top-4 right-4 w-4 h-4 border-r-2 border-t-2 border-primary" />
                 <div className="absolute bottom-4 left-4 w-4 h-4 border-l-2 border-b-2 border-primary" />
@@ -298,13 +300,18 @@ export default function WorkoutPage() {
           </div>
         </div>
 
-        {/* Control Panel */}
         <div className="w-full lg:w-96 flex flex-col gap-4">
           <Card className="bg-card/50 border-white/5 flex flex-col items-center justify-center p-8 relative overflow-hidden">
             <div className="absolute top-4 left-6 text-xs font-bold text-accent uppercase tracking-widest">
               Set {currentSet} of {currentEx.suggestedSets}
             </div>
             
+            {phase === 'HOLD' && isActive && (
+              <div className="absolute top-4 right-6 text-primary animate-pulse">
+                <Music size={16} />
+              </div>
+            )}
+
             <div className="relative w-56 h-56 flex items-center justify-center">
               <svg className="w-full h-full -rotate-90">
                 <circle
@@ -340,7 +347,7 @@ export default function WorkoutPage() {
               </h4>
               <p className="text-muted-foreground text-xs">
                 {phase === 'READY' && `Next: ${currentEx.name}`}
-                {phase === 'HOLD' && 'Match the model\'s form!'}
+                {phase === 'HOLD' && 'Stay focused and match the model!'}
                 {phase === 'REP_REST' && 'Brief recovery...'}
                 {phase === 'SET_REST' && 'Adjusting camera...'}
               </p>

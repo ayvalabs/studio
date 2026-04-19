@@ -15,43 +15,43 @@ const workoutImagePrompts = [
     id: 1,
     exercise_name: 'Plank Hold',
     prompt:
-      'Full-body side view of an exceptionally attractive athletic Asian woman with long, flowing dark hair and fair skin, beaming with a happy and confident smile. She is wearing a deep teal sports bra and charcoal gray high-waisted leggings, performing a perfect forearm plank on a dark green mat in a modern gym studio with large windows and soft daylight. Her body forms a straight line from head to heels. Background is a consistent neutral, slightly blurred gym environment.',
+      'Full-body side view of an exceptionally beautiful athletic Asian woman with extra long flowing silky dark hair and radiant fair skin, beaming with a happy and confident smile. She is wearing a deep teal sports bra and charcoal gray high-waisted leggings, performing a perfect forearm plank on a dark green mat in a modern gym studio with large windows and soft daylight. Her body forms a straight line from head to heels. Background is a consistent neutral, slightly blurred gym environment.',
   },
   {
     id: 2,
     exercise_name: 'Wall Sit',
     prompt:
-      'Three-quarter side view of the same exceptionally attractive athletic Asian woman with long flowing hair and fair skin, smiling brightly and happily. She is in the same teal sports bra and charcoal leggings performing a wall sit against a light gray wall in the same modern gym studio. Her back is flat on the wall, hips and knees at 90 degrees, face showing happy determination. Background matches previous images.',
+      'Three-quarter side view of the same exceptionally attractive and radiant athletic Asian woman with long silky flowing hair and fair skin, smiling brightly and happily. She is in the same teal sports bra and charcoal leggings performing a wall sit against a light gray wall in the same modern gym studio. Her back is flat on the wall, hips and knees at 90 degrees, face showing happy determination. Background matches previous images.',
   },
   {
     id: 3,
     exercise_name: 'Single-Leg Glute Bridge Hold',
     prompt:
-      'Side view of the same attractive athletic Asian woman with long hair and fair skin, smiling happily, on a dark green mat in the same gym. She is performing a single-leg glute bridge hold. One foot is planted firmly on the mat, the other leg extended straight out, hips lifted high. Her expression is radiant and focused. Clothing and background are identical to previous images.',
+      'Side view of the same beautiful athletic Asian woman with long hair and fair skin, smiling happily, on a dark green mat in the same gym. She is performing a single-leg glute bridge hold. One foot is planted firmly on the mat, the other leg extended straight out, hips lifted high. Her expression is radiant and focused. Clothing and background are identical to previous images.',
   },
   {
     id: 4,
     exercise_name: 'Hollow Body Hold',
     prompt:
-      'Angled overhead view of the same attractive Asian woman with long hair and fair skin, smiling cheerfully, performing a hollow body hold on the same mat. She lies on her back with lower back pressed into the mat, shoulders and legs lifted off the floor, arms extended overhead. Her face shows happy concentration. The modern gym studio background is consistent and slightly blurred.',
+      'Angled overhead view of the same attractive Asian woman with long silky hair and fair skin, smiling cheerfully, performing a hollow body hold on the same mat. She lies on her back with lower back pressed into the mat, shoulders and legs lifted off the floor, arms extended overhead. Her face shows happy concentration. The modern gym studio background is consistent and slightly blurred.',
   },
   {
     id: 5,
     exercise_name: 'L-Sit Hold',
     prompt:
-      'Side view of the same athletic Asian woman with long flowing hair and fair skin, smiling confidently and happily, using low parallettes in the same modern gym studio to perform an L-sit hold. Arms are straight, legs extended straight out in front forming a sharp L shape. She looks radiant and strong. Outfit and softly blurred gym background are consistent.',
+      'Side view of the same beautiful athletic Asian woman with long flowing hair and fair skin, smiling confidently and happily, using low parallettes in the same modern gym studio to perform an L-sit hold. Arms are straight, legs extended straight out in front forming a sharp L shape. She looks radiant and strong. Outfit and softly blurred gym background are consistent.',
   },
   {
     id: 6,
     exercise_name: 'Pike Push-Up Hold',
     prompt:
-      'Three-quarter front view of the same athletic Asian woman with long hair and fair skin, smiling happily, performing a pike push-up hold on the same dark green mat. Her hips are high, hands on the mat, head lowered toward the mat. She maintains a cheerful and composed expression. Background is the same modern gym with soft, natural light.',
+      'Three-quarter front view of the same athletic Asian woman with long silky hair and fair skin, smiling happily, performing a pike push-up hold on the same dark green mat. Her hips are high, hands on the mat, head lowered toward the mat. She maintains a cheerful and composed expression. Background is the same modern gym with soft, natural light.',
   },
   {
     id: 7,
     exercise_name: 'Bear Crawl Hover Hold',
     prompt:
-      'Side view of the same attractive athletic Asian woman with long hair and fair skin, smiling brightly, performing a bear crawl hover hold on the same dark green mat in the same gym. Hands under shoulders, knees hovering just above the floor, back flat. Her face shows happy determination. Background remains consistent and slightly blurred.',
+      'Side view of the same beautiful athletic Asian woman with long flowing hair and fair skin, smiling brightly, performing a bear crawl hover hold on the same dark green mat in the same gym. Hands under shoulders, knees hovering just above the floor, back flat. Her face shows happy determination. Background remains consistent and slightly blurred.',
   },
 ];
 
